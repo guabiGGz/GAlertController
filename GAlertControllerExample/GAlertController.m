@@ -198,7 +198,7 @@
                                                    destructiveHandler:self.destructiveHandler];
     }
     
-    if ( floor(NSFoundationVersionNumber) < NSFoundationVersionNumber_iOS_8_0 ) {  
+    if ( floor(NSFoundationVersionNumber) < NSFoundationVersionNumber_iOS_8_3 ) {
         switch (self.style) {
             case GAlertStyleDefault: {
                 [self.alertView show];
@@ -285,7 +285,9 @@
             break;
     }
     
+    NSInteger indexOffset = 0;
     if(cancelButtonTitle) {
+        indexOffset += 1;
         UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelButtonTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
             if(cancelHandler)       cancelHandler();
         }];
@@ -293,6 +295,7 @@
     }
                                        
     if(destructiveTitle) {
+        indexOffset += 1;
         UIAlertAction *destructiveAction = [UIAlertAction actionWithTitle:destructiveTitle style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
             if(destructiveHandler)       destructiveHandler();
         }];
@@ -303,7 +306,7 @@
         @autoreleasepool {
             for (int i = 0; i < self.otherTitles.count; i++) {
                 UIAlertAction *otherAction = [UIAlertAction actionWithTitle:self.otherTitles[i] style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                    if(defaultHandler)       defaultHandler(i);
+                    if(defaultHandler)       defaultHandler(i + indexOffset);
                 }];
                 [self.alertController addAction:otherAction];
             }
@@ -313,14 +316,20 @@
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex NS_DEPRECATED_IOS(2_0, 9_0) {
-     self.defaultHandler(buttonIndex);
+    
+    if (buttonIndex == alertView.cancelButtonIndex) {
+        if (self.cancelHandler)   self.cancelHandler();
+    } else {
+        self.defaultHandler(buttonIndex);
+    }
     // objc_removeAssociatedObjects(self);
 }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// Called when we cancel a view (eg. the user clicks the Home button). This is not called when the user clicks the cancel button.
 - (void)alertViewCancel:(UIAlertView *)alertView {
-    if (self.cancelHandler)   self.cancelHandler();
+//    if (self.cancelHandler)   self.cancelHandler();
     // objc_removeAssociatedObjects(self);
 }
 #pragma clang diagnostic pop
@@ -331,7 +340,11 @@
     if (!buttonIndex) {
         if (self.destructiveHandler) self.destructiveHandler();
     } else {
-        self.defaultHandler(buttonIndex);
+        if (buttonIndex == actionSheet.cancelButtonIndex) {
+            if (self.cancelHandler)   self.cancelHandler();
+        } else {
+            self.defaultHandler(buttonIndex);
+        }
     }
     // objc_removeAssociatedObjects(self);
 }
@@ -339,8 +352,8 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// Called when we cancel a view (eg. the user clicks the Home button). This is not called when the user clicks the cancel button.
 - (void)actionSheetCancel:(UIActionSheet *)actionSheet {
-    if(self.cancelHandler) self.cancelHandler();
     //objc_removeAssociatedObjects(self);
 }
 #pragma clang diagnostic pop
