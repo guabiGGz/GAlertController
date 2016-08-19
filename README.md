@@ -1,2 +1,2 @@
 # GAlertController
-兼容UIAlertView和UIAlertController,支持链式调用
+兼容UIAlertView,UIActionSheet和UIAlertController,按需自由设置,块状语法结构,适合在这个多版本兼容的水深火热的年代,给内心带来一丝安宁!
