@@ -17,8 +17,8 @@
 @property (nonatomic)         GAlertStyle  style;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-@property (nonatomic, strong) UIAlertView  *alertView;
-@property (nonatomic, strong) UIActionSheet  *actionSheet;
+@property (nonatomic, strong) UIAlertView   *alertView;
+@property (nonatomic, strong) UIActionSheet *actionSheet;
 #pragma clang diagnostic pop
 @property (nonatomic, strong) UIAlertController  *alertController;
 @property (nonatomic, copy)   NSString      *title;
@@ -29,7 +29,10 @@
 @property (nonatomic, copy)   TapIndexDefaultHandler defaultHandler;
 @property (nonatomic, copy)   TapCancelHandler cancelHandler;
 @property (nonatomic, copy)   TapDestructiveHandler destructiveHandler;
+
+@property (nonatomic, weak) UIViewController  *viewController;
 @end
+
 @implementation GAlertController
 
 + (_Nonnull instancetype)alertWithStyle:(GAlertStyle )style
@@ -51,7 +54,7 @@
     va_list otherTitles_list;
     va_start(otherTitles_list, otherTitle);
     NSString *tempOtherTitle;
-   alert.otherTitles = [NSMutableArray arrayWithCapacity:1];
+    alert.otherTitles = [NSMutableArray arrayWithCapacity:1];
     [alert.otherTitles addObject:otherTitle];
     while ((tempOtherTitle = va_arg(otherTitles_list, NSString *))) {
         [alert.otherTitles addObject:tempOtherTitle];
@@ -60,7 +63,7 @@
 
     
     
-    if ( floor(NSFoundationVersionNumber) < NSFoundationVersionNumber_iOS_8_3 ) {
+    if ( floor(NSFoundationVersionNumber) < NSFoundationVersionNumber_iOS_8_0 ) {
         switch(style) {
             case GAlertStyleDefault:
                 alert.alertView = [alert createAlertWithTitle:title
@@ -161,8 +164,11 @@
 
 - (void)showAtViewController:( __kindof UIViewController * _Nonnull )viewController {
     if (!viewController)            return;
-    if ( floor(NSFoundationVersionNumber) < NSFoundationVersionNumber_iOS_8_3 ) {
-    objc_setAssociatedObject(viewController, @"ggAlert", self, OBJC_ASSOCIATION_RETAIN_NONATOMIC);  
+    
+    self.viewController = viewController;
+    
+    if ( floor(NSFoundationVersionNumber) < NSFoundationVersionNumber_iOS_8_0 ) {
+    objc_setAssociatedObject(viewController, @"ggAlertController", self, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     switch(self.style) {
             case GAlertStyleDefault:
                 self.alertView = [self createAlertWithTitle:self.title
@@ -198,7 +204,7 @@
                                                    destructiveHandler:self.destructiveHandler];
     }
     
-    if ( floor(NSFoundationVersionNumber) < NSFoundationVersionNumber_iOS_8_3 ) {
+    if ( floor(NSFoundationVersionNumber) < NSFoundationVersionNumber_iOS_8_0 ) {
         switch (self.style) {
             case GAlertStyleDefault: {
                 [self.alertView show];
@@ -209,9 +215,7 @@
                 break;
             }
         }
-
     }
-    
     else {
         [viewController presentViewController:self.alertController animated:YES completion:nil];
     }
@@ -285,9 +289,9 @@
             break;
     }
     
+    //用于将下标索引按顺序默认从0开始，不考虑cancel！
     NSInteger indexOffset = 0;
     if(cancelButtonTitle) {
-        indexOffset += 1;
         UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:cancelButtonTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
             if(cancelHandler)       cancelHandler();
         }];
@@ -322,16 +326,18 @@
     } else {
         self.defaultHandler(buttonIndex);
     }
-    // objc_removeAssociatedObjects(self);
+    
+    [self removeAssocaited];
 }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 // Called when we cancel a view (eg. the user clicks the Home button). This is not called when the user clicks the cancel button.
 - (void)alertViewCancel:(UIAlertView *)alertView {
-//    if (self.cancelHandler)   self.cancelHandler();
-    // objc_removeAssociatedObjects(self);
+    if (self.cancelHandler)   self.cancelHandler();
+    [self removeAssocaited];
 }
+
 #pragma clang diagnostic pop
 
 #pragma clang diagnostic push
@@ -346,7 +352,7 @@
             self.defaultHandler(buttonIndex);
         }
     }
-    // objc_removeAssociatedObjects(self);
+   [self removeAssocaited];
 }
 #pragma clang diagnostic pop
 
@@ -354,7 +360,13 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 // Called when we cancel a view (eg. the user clicks the Home button). This is not called when the user clicks the cancel button.
 - (void)actionSheetCancel:(UIActionSheet *)actionSheet {
-    //objc_removeAssociatedObjects(self);
+    [self removeAssocaited];
 }
 #pragma clang diagnostic pop
+
+#pragma mark - Privated Method
+- (void)removeAssocaited {
+    if (!self.viewController)   return;
+    objc_removeAssociatedObjects(self.viewController);
+}
 @end

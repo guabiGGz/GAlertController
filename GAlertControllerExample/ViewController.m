@@ -33,19 +33,31 @@
     [self showAlert:^(GAlertMaker *make) {
         make.style = style;
         make.title = @"title";
-        make.cancelTitle = @"cancelTitle";
-        make.destructiveTitle = @"xx";
         make.message = @"message";
-        make.cancelHandler = ^{
-            NSLog(@"cancel!!!");
-        };
-        make.destructiveHandler = ^{
-            NSLog(@"xx!!!");
-        };
-        make.defaultHandler = ^(NSInteger index){
-            NSLog(@"tap %ld",(long)index);
-        };
-        make.otherTitles = @[@"aa",@"bb",@"cc"];
+        [make setDestructiveTitle:@"xx" destructiveHandler:^{
+            NSLog(@"xx");
+        }];
+        [make setCancelTitle:@"cancel" cancelHandler:^{
+            NSLog(@"cancel");
+        }];
+        [make setDefaultAction:^(NSInteger tapIndex) {
+            NSLog(@"tap %ld",(long)tapIndex);
+        } forOtherTitles:@"aa",@"bb",@"cc", nil];
+//        [make setOtherTitles:@[@"aa",@"bb",@"cc"] defaultHandler:^(NSInteger tapIndex) {
+//            NSLog(@"tap %ld",(long)tapIndex);
+//        }];
+//        make.cancelTitle = @"cancelTitle";
+      
+       
+//        make.cancelHandler = ^{
+//            NSLog(@"cancel!!!");
+//        };
+//        
+//       
+//        make.defaultHandler = ^(NSInteger index){
+//            NSLog(@"tap %ld",(long)index);
+//        };
+//        make.otherTitles = @[@"aa",@"bb",@"cc"];
     }];
 }
 
@@ -53,5 +65,4 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-
 @end
